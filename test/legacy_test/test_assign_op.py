@@ -279,7 +279,9 @@ class TestAssignOpErrorApi(unittest.TestCase):
     @test_with_pir_api
     def test_errors(self):
         paddle.enable_static()
-        with program_guard(Program(), Program()):
+        with paddle.static.program_guard(
+            paddle.static.Program(), paddle.static.Program()
+        ):
             # The type of input must be Variable or numpy.ndarray.
             x1 = base.create_lod_tensor(
                 np.array([[-1]]), [[1]], base.CPUPlace()
@@ -293,7 +295,9 @@ class TestAssignOpErrorApi(unittest.TestCase):
     @test_with_pir_api
     def test_type_error(self):
         paddle.enable_static()
-        with program_guard(Program(), Program()):
+        with paddle.static.program_guard(
+            paddle.static.Program(), paddle.static.Program()
+        ):
             x = [paddle.randn([3, 3]), paddle.randn([3, 3])]
             # not support to assign list(var)
             self.assertRaises(TypeError, paddle.assign, x)
@@ -304,6 +308,7 @@ class TestAssignDoubleGradCheck(unittest.TestCase):
     def assign_wrapper(self, x):
         return paddle.assign(x[0])
 
+    @test_with_pir_api
     @prog_scope()
     def func(self, place):
         # the shape of input variable should be clearly specified, not inlcude -1.
@@ -336,6 +341,7 @@ class TestAssignTripleGradCheck(unittest.TestCase):
     def assign_wrapper(self, x):
         return paddle.assign(x[0])
 
+    @test_with_pir_api
     @prog_scope()
     def func(self, place):
         # the shape of input variable should be clearly specified, not inlcude -1.

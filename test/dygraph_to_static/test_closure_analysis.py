@@ -17,7 +17,7 @@ import unittest
 
 from dygraph_to_static_utils_new import (
     Dy2StTestBase,
-    test_and_compare_with_new_ir,
+    test_legacy_and_pir_exe_and_pir_api,
 )
 from numpy import append
 
@@ -197,6 +197,7 @@ class TestClosureAnalysis(Dy2StTestBase):
             {'func': set('i'), 'test_normal_argument': set('x')},
         ]
 
+    @test_legacy_and_pir_exe_and_pir_api
     def test_main(self):
         if self.judge_type == 'push_pop_vars':
             for push_pop_vars, func in zip(
@@ -263,7 +264,7 @@ class TestClosureAnalysis_PushPop(TestClosureAnalysis):
 
 
 class TestPushPopTrans(Dy2StTestBase):
-    @test_and_compare_with_new_ir(False)
+    @test_legacy_and_pir_exe_and_pir_api
     def test(self):
         def vlist_of_dict(x):
             ma = {'a': []}
@@ -274,7 +275,7 @@ class TestPushPopTrans(Dy2StTestBase):
         x = paddle.to_tensor([3])
         print(paddle.jit.to_static(vlist_of_dict)(x))
 
-    @test_and_compare_with_new_ir(False)
+    @test_legacy_and_pir_exe_and_pir_api
     def test2(self):
         import numpy as np
 
@@ -287,7 +288,7 @@ class TestPushPopTrans(Dy2StTestBase):
         x = paddle.to_tensor([3])
         print(paddle.jit.to_static(vlist_of_dict)(x))
 
-    @test_and_compare_with_new_ir(False)
+    @test_legacy_and_pir_exe_and_pir_api
     def test3(self):
         import numpy as np
 
@@ -300,7 +301,7 @@ class TestPushPopTrans(Dy2StTestBase):
         x = paddle.to_tensor([3])
         print(paddle.jit.to_static(vlist_of_dict)(x))
 
-    @test_and_compare_with_new_ir(False)
+    @test_legacy_and_pir_exe_and_pir_api
     def test4(self):
         import numpy as np
 
@@ -313,7 +314,7 @@ class TestPushPopTrans(Dy2StTestBase):
         x = paddle.to_tensor([3])
         print(paddle.jit.to_static(vlist_of_dict)(x))
 
-    @test_and_compare_with_new_ir(False)
+    @test_legacy_and_pir_exe_and_pir_api
     def test5(self):
         import numpy as np
 

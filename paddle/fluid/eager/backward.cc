@@ -15,6 +15,7 @@
 #include "paddle/fluid/eager/backward.h"
 
 #include "paddle/fluid/eager/general_grad.h"
+#include "paddle/fluid/memory/stats.h"
 #include "paddle/phi/kernels/autotune/switch_autotune.h"
 
 namespace egr {
@@ -111,20 +112,7 @@ std::vector<paddle::Tensor> RunBackward(
     const std::vector<paddle::Tensor>& no_grad_vars = {}) {
   VLOG(3) << "Start Backward";
 
-  std::queue<GradNodeBase*> force_sequential_nodes_forward_queue =
-      egr::Controller::Instance().GetForceSequentialNodes();
-  std::deque<GradNodeBase*> force_sequential_nodes_queue;
-  std::set<GradNodeBase*> force_sequential_nodes_set;
-  std::set<GradNodeBase*> ready_force_sequential_nodes;
-  auto force_sequential_nodes_size =
-      force_sequential_nodes_forward_queue.size();
-  for (size_t i = 0; i < force_sequential_nodes_size; ++i) {
-    force_sequential_nodes_set.insert(
-        force_sequential_nodes_forward_queue.front());
-    force_sequential_nodes_queue.push_front(
-        force_sequential_nodes_forward_queue.front());
-    force_sequential_nodes_forward_queue.pop();
-  }
+  auto place = egr::Controller::Instance().GetExpectedPlace();
 
   // *Gradient Hook should happen at node-level
   // *Inplace version check should perform at node-level
@@ -233,6 +221,24 @@ std::vector<paddle::Tensor> RunBackward(
   // 3. Compute in_degree for each node
   std::unordered_map<GradNodeBase*, int> node_in_degree_map =
       getInDegreeMap(queue);
+
+  std::queue<GradNodeBase*> force_sequential_nodes_forward_queue =
+      egr::Controller::Instance().GetForceSequentialNodes();
+  std::deque<GradNodeBase*> force_sequential_nodes_queue;
+  std::set<GradNodeBase*> force_sequential_nodes_set;
+  std::set<GradNodeBase*> ready_force_sequential_nodes;
+  auto force_sequential_nodes_size =
+      force_sequential_nodes_forward_queue.size();
+  for (size_t i = 0; i < force_sequential_nodes_size; ++i) {
+    if (node_in_degree_map.count(
+            force_sequential_nodes_forward_queue.front())) {
+      force_sequential_nodes_set.insert(
+          force_sequential_nodes_forward_queue.front());
+      force_sequential_nodes_queue.push_front(
+          force_sequential_nodes_forward_queue.front());
+    }
+    force_sequential_nodes_forward_queue.pop();
+  }
 
   VLOG(5) << "Startup_ops's size is " << queue.size();
 
@@ -405,6 +411,7 @@ std::vector<paddle::Tensor> RunBackward(
         }
       }
     }
+    paddle::memory::LogDeviceMemoryStats(place, std::string((*node).name()));
   }
 
   VLOG(7) << "Run Backward Final hook size: "

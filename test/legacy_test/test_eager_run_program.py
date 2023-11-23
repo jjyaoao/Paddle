@@ -64,6 +64,7 @@ def _create_out(var):
         var_desc.type(),
         False,
     )
+    out.stop_gradient = False
     return out
 
 
@@ -152,7 +153,7 @@ class TestRunProgram(unittest.TestCase):
             )
 
         _legacy_C_ops.run_program(
-            [x_t, y_t], [fake_var], [out_t], [scope], [fake_var], None, *attrs
+            [x_t, y_t], [fake_var], [out_t], [scope], None, *attrs
         )
 
         loss = paddle.mean(out_t)
